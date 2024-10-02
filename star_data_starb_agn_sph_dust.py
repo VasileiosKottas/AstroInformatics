@@ -128,65 +128,64 @@ def create_data(iterations,**kwargs):
         len(max(all_flux_inter_lists, key=len))
     )
 
-    # Writing all data to a single CSV file
     with open('data/spectra.csv', 'w', newline='') as file:
         writer = csv.writer(file)
 
-        # Create headers for each galaxy
-        headers = []
-        for iteration in range(1, total_iterations + 1):
-            headers.extend([
-                f"Galaxy{iteration}_Wavelength", f"Galaxy{iteration}_Flux",
-                # f"Galaxy{iteration}_Starburst_Flux", f"Galaxy{iteration}_AGN_Flux",
-                # f"Galaxy{iteration}_Spheroid_Flux", f"Galaxy{iteration}_Polar_Dust_Flux",
-                # f"Galaxy{iteration}_Interpolated_Wavelength", f"Galaxy{iteration}_Interpolated_Flux"
-            ])
+        # Get the wavelengths from the first iteration to use as column headers
+        wavelength_headers = all_output_wave_lists[0]
 
-        # Write the headers
-        writer.writerow(headers)
+        # Write the headers (wavelengths)
+        writer.writerow(wavelength_headers)
 
-        # Writing the data row by row, padding shorter columns with NaN
-        for i in range(max_len):
-            row = []
-            for j in range(total_iterations):
-                # Pad shorter lists with NaN where needed
-                row.append(all_output_wave_lists[j][i] if i < len(all_output_wave_lists[j]) else np.nan)
-                row.append(all_output_flux_lists[j][i] if i < len(all_output_flux_lists[j]) else np.nan)
-                # row.append(all_starburst_flux_lists[j][i] if i < len(all_starburst_flux_lists[j]) else np.nan)
-                # row.append(all_agn_flux_lists[j][i] if i < len(all_agn_flux_lists[j]) else np.nan)
-                # row.append(all_spheroid_flux_lists[j][i] if i < len(all_spheroid_flux_lists[j]) else np.nan)
-                # row.append(all_polar_dust_flux_lists[j][i] if i < len(all_polar_dust_flux_lists[j]) else np.nan)
-                # row.append(all_wave_inter_lists[j][i] if i < len(all_wave_inter_lists[j]) else np.nan)
-                # row.append(all_flux_inter_lists[j][i] if i < len(all_flux_inter_lists[j]) else np.nan)
+        # Now write flux values for each iteration under the corresponding wavelength
+        for iteration in range(total_iterations):
+            # Write the flux values for the current iteration
+            writer.writerow(all_output_flux_lists[iteration])
+
+        # # Writing the data row by row, padding shorter columns with NaN
+        # for i in range(max_len):
+        #     row = []
+        #     for j in range(total_iterations):
+        #         # Pad shorter lists with NaN where needed
+        #         row.append(all_output_wave_lists[j][i] if i < len(all_output_wave_lists[j]) else np.nan)
+        #         row.append(all_output_flux_lists[j][i] if i < len(all_output_flux_lists[j]) else np.nan)
+        #         # row.append(all_starburst_flux_lists[j][i] if i < len(all_starburst_flux_lists[j]) else np.nan)
+        #         # row.append(all_agn_flux_lists[j][i] if i < len(all_agn_flux_lists[j]) else np.nan)
+        #         # row.append(all_spheroid_flux_lists[j][i] if i < len(all_spheroid_flux_lists[j]) else np.nan)
+        #         # row.append(all_polar_dust_flux_lists[j][i] if i < len(all_polar_dust_flux_lists[j]) else np.nan)
+        #         # row.append(all_wave_inter_lists[j][i] if i < len(all_wave_inter_lists[j]) else np.nan)
+        #         # row.append(all_flux_inter_lists[j][i] if i < len(all_flux_inter_lists[j]) else np.nan)
             
-            # Write the row to the CSV
-            writer.writerow(row)
+        #     # Write the row to the CSV
+        #     writer.writerow(row)
     
         # Writing all data to a single CSV file
     with open('data/interpolated_spectra.csv', 'w', newline='') as file:
         writer = csv.writer(file)
 
-        # Create headers: include only Galaxy1_Interpolated_Wavelength and all GalaxyX_Interpolated_Flux columns
-        headers = ["Galaxy1_Interpolated_Wavelength"]
-        for iteration in range(1, total_iterations + 1):
-            headers.append(f"Galaxy{iteration}_Interpolated_Flux")
+        # Get the interpolated wavelengths from the first iteration to use as column headers
+        interpolated_wavelength_headers = all_wave_inter_lists[0]
 
-        # Write the headers
-        writer.writerow(headers)
+        # Write the headers (interpolated wavelengths)
+        writer.writerow(interpolated_wavelength_headers)
 
-        # Writing the data row by row, padding shorter columns with NaN
-        for i in range(max_len):
-            row_inter = []
+        # Write interpolated flux values for each iteration under the corresponding wavelength
+        for iteration in range(total_iterations):
+            writer.writerow(all_flux_inter_lists[iteration])
 
-            # Add the wavelength only from the first iteration
-            row_inter.append(all_wave_inter_lists[0][i] if i < len(all_wave_inter_lists[0]) else np.nan)
+        # # Writing the data row by row, padding shorter columns with NaN
+        # for i in range(max_len):
+        #     row_inter = []
 
-            # Add flux data for all iterations
-            for j in range(total_iterations):
-                row_inter.append(all_flux_inter_lists[j][i] if i < len(all_flux_inter_lists[j]) else np.nan)
+        #     # Add the wavelength only from the first iteration
+        #     row_inter.append(all_wave_inter_lists[0][i] if i < len(all_wave_inter_lists[0]) else np.nan)
 
-            # Write the row to the CSV
-            writer.writerow(row_inter)
+        #     # Add flux data for all iterations
+        #     for j in range(total_iterations):
+        #         row_inter.append(all_flux_inter_lists[j][i] if i < len(all_flux_inter_lists[j]) else np.nan)
+
+        #     # Write the row to the CSV
+        #     writer.writerow(row_inter)
 
     return output_wave_list, output_flux_list, wave_inter_list, flux_inter_list
 
