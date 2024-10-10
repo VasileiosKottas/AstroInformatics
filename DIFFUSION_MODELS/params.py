@@ -1,0 +1,9 @@
+input_dim = 10
+n_heads = 5
+n_layers = 128
+output_dim = 10
+learning_rate = 1e-4
+num_steps = 50
+beta_start = 0.0001
+beta_end = 0.5
+# epochs = 100
