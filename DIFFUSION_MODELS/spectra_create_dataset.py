@@ -78,15 +78,19 @@ def get_dataloader(df_tot, batch_size, device, eval_length=128, target_dim=1):
 
     return train_loader, scaler, mean_scaler
 
-def use_data():
+def use_data(**kwargs):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+    kind_of_data = kwargs.get('data')
     df_inter = pd.read_csv('../data/interpolated_spectra.csv')
     df_spectra = pd.read_csv('../data/spectra.csv')
-    df, mask = df_concat(df_inter,df_spectra)
+    if kind_of_data == 'photometry':
+        df = df_inter
+    else:
+        df, mask = df_concat(df_inter,df_spectra)
     sorted_wavelengths = df.columns.values.astype(float)
     df_plot = df.T
     df = df.T.to_numpy()
+    # df_spectra = df_spectra.T.to_numpy()
     # df = torch.tensor(df)
     df.shape
     print(df.shape)
