@@ -35,7 +35,7 @@ diffusion = DiffusionProcess(num_steps, beta_start, beta_end)
 predictions = []
 noise = []
 # Example training loop
-epochs = 1000  # Number of epochs
+epochs = 100  # Number of epochs
 for epoch in range(epochs):
     for step in range(diffusion.steps):
         noisy_data = diffusion.add_noise(data, step)

@@ -1,40 +1,47 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler
+from hyperparameters import *
 from torch.utils.data import Dataset, DataLoader
 import torch 
 
 class TimeSeriesDataset(Dataset):
-    def __init__(self, data, seq_length):
-        # Directly convert numpy array to torch tensor
-        self.data = torch.tensor(data, dtype=torch.float32)
-        self.seq_length = seq_length
+    def __init__(self, data, seq_len):
+        self.data = data
+        self.seq_len = seq_len
 
     def __len__(self):
-        # Length is reduced since we create sequences of seq_length
-        return len(self.data) - self.seq_length
+        return len(self.data) - self.seq_len + 1
 
-    def __getitem__(self, idx):
-        # Return sequences of shape (seq_length, 1)
-        seq = self.data[idx:idx + self.seq_length]
-        # seq = seq.view(1, 1)
-        return seq
+    def __getitem__(self, index):
+        return self.data[index:index + self.seq_len]
 
-def load_data():
+def data():
+    # device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
     df = pd.read_csv('../data/interpolated_spectra.csv')
     df = df.dropna()
     df = df.T
-    print(len(df))
-    print(df.shape)
-    
+    # Assuming df is your DataFrame
+    df = df.reset_index()  # Move the index to a new column
+    wave = df['index']
+    df = df.drop(columns='index')
     scaler = MinMaxScaler()
     scaled_data = scaler.fit_transform(df.values).astype(np.float32)
+    data = []
+    for i in range(len(df) - SEQ_LEN):
+        data.append(scaled_data[1:])
+    # data.append(scaled_data[1])
+    data = torch.tensor(data)
+    n_windows = len(data)
     
-    # Reshape to (17, 1, 1)
-    # Assuming you want to take the first time step from each sample
-    scaled_data = scaled_data[:, 0, np.newaxis]  # This will give you shape (17, 1, 1)
+    dataloader = DataLoader(data, batch_size=BATCH_SIZE, shuffle=True)
+    real_batch = dataloader
     
-    print(type(scaled_data), scaled_data.shape)  # Check the type and shape
-    n_windows = len(scaled_data)
+    random_data = data * torch.rand_like(data).float()
     
-    return scaled_data, n_windows
+    random_dataset = TimeSeriesDataset(random_data, SEQ_LEN)
+    random_dataloader = random_dataset
+    random_batch = random_dataloader
+    # print(data.shape)
+    return real_batch, random_batch, wave, data

@@ -12,42 +12,24 @@ from pathlib import Path
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-import hyperparameters as param
-from data import load_data, TimeSeriesDataset
+from hyperparameters import *
+from data import data
 from models import *
 from training_func import *
 from utils import *
+
 device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
-# 'cuda' if torch.cuda.is_available else
-device
 
-data, n_windows = load_data()
-
-dataset = TimeSeriesDataset(data, param.SEQ_LEN)
-dataloader = DataLoader(dataset, batch_size=param.BATCH_SIZE, shuffle=True)
-real_batch = dataloader
-# Create random data and dataloader
-random_data = torch.randn(len(data), param.N_SEQ).float()
-random_dataset = TimeSeriesDataset(random_data, param.SEQ_LEN)
-random_dataloader = DataLoader(random_dataset, batch_size=param.BATCH_SIZE, shuffle=True)
-random_batch = random_dataloader
-# Example usage
-for batch in dataloader:
-    print(batch.shape)  # Should be (batch_size, seq_len, 1)
-    break
-
-for batch in random_dataloader:
-    print(batch.shape) # Should be (batch_size, seq_len, 1)
-    break
-
+real_batch, random_batch, wavelength, scaled_data = data()
+print(next(iter(real_batch)).shape)
 # Define the models with the correct input sizes
-embedder = RNNModule(n_layers=4, input_size=param.N_SEQ, hidden_units=param.HIDDEN_DIM, output_units=param.HIDDEN_DIM).to(device)  # Input size = n_seq for the first layer
-recovery = RNNModule(n_layers=4, input_size=param.HIDDEN_DIM, hidden_units=param.HIDDEN_DIM, output_units=param.N_SEQ).to(device)  # Input size = hidden_dim to match embedder output
-generator = RNNModule(n_layers=4, input_size=param.N_SEQ, hidden_units=param.HIDDEN_DIM, output_units=param.HIDDEN_DIM).to(device)
-discriminator = RNNModule(n_layers=4, input_size=param.N_SEQ, hidden_units=param.HIDDEN_DIM, output_units=1, output_activation=torch.sigmoid).to(device)
-supervisor = RNNModule(n_layers=3, input_size=param.HIDDEN_DIM, hidden_units=param.HIDDEN_DIM, output_units=param.HIDDEN_DIM).to(device)
+embedder = RNNModule(n_layers=4, input_size=N_SEQ, hidden_units=HIDDEN_DIM, output_units=HIDDEN_DIM).to(device)  # Input size = n_seq for the first layer
+recovery = RNNModule(n_layers=4, input_size=HIDDEN_DIM, hidden_units=HIDDEN_DIM, output_units=N_SEQ).to(device)  # Input size = hidden_dim to match embedder output
+generator = RNNModule(n_layers=4, input_size=N_SEQ, hidden_units=HIDDEN_DIM, output_units=HIDDEN_DIM).to(device)
+discriminator = RNNModule(n_layers=4, input_size=N_SEQ, hidden_units=HIDDEN_DIM, output_units=1, output_activation=torch.sigmoid).to(device)
+supervisor = RNNModule(n_layers=3, input_size=HIDDEN_DIM, hidden_units=HIDDEN_DIM, output_units=HIDDEN_DIM).to(device)
 
-train_steps = 1000
+train_steps = 10000
 gamma = 1
 
 mse = nn.MSELoss()
@@ -189,14 +171,11 @@ generated_data = np.concatenate(generated_data, axis=0)
 plt.figure(figsize=(12, 6))
 
 # Plot real data
-
-# plt.plot(sc[0], sc[1])
+# plt.plot(wavelength[:-1], scaled_data[0,:,1])
 
 
 # Plot generated data
-
-plt.plot(generated_data[0],c = 'r')  # Adjust based on your data shape
-
-# plt.plot(generated_data)
+plt.scatter(wavelength[:-1], generated_data[:,:,:],c = 'r')  # Adjust based on your data shape
+plt.savefig("generatedvsreal.png")
 plt.show()
 
