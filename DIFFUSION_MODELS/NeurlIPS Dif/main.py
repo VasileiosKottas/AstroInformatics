@@ -1,69 +1,68 @@
-from model import TSDiff
-from train import train_model, generate_fluxes, print_evaluation
-from visualize import plot_real_vs_generated, plot_generated_samples
 import torch
+from models.tsdiff import SelfGuidedTSDiff
+from utils.data_loader import SpectraDataset
+from utils.plotting import plot_spectra
+from training.train import Trainer
+from hyperparameters import batch_size, num_epochs, input_dim, time_steps, learning_rate
+import pandas as pd
 import numpy as np
-import pandas as pd 
-from sklearn.preprocessing import StandardScaler  # or MinMaxScaler
-import joblib
-import matplotlib.pyplot as plt
-def main():
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+from torch.utils.data import DataLoader
 
-    # Load your dataset, assumed shape [17, 11] (1 wavelength, 10 fluxes)
-    df = pd.read_csv('../../data/interpolated_spectra.csv').T
-    
-    df.reset_index(inplace=True)
-    df.columns = range(len(df.columns))
-    data = df.values.astype(np.float64)
-    # data = data / data.values.max()
-    
-    data_scaled = data / np.max(data)
-    # Separate wavelengths and fluxes
-    wavelengths = data_scaled[:, 0]  # Shape: [17,]
-    fluxes = data_scaled[:, 1:]  # Shape: [10, 17] - Transpose to match [num_fluxes, num_wavelengths]
-    # Step 1: Scale the flux data
-    # Step 1: Scale the flux data
-    # scaler = StandardScaler()  # or MinMaxScaler(feature_range=(0, 1))
-    # scaled_fluxes = scaler.fit_transform(fluxes)
-    # scaled_fluxes = fluxes / 
-    # Save the scaler for future inverse transformation
-    # joblib.dump(scaler, 'scaler.pkl')
-    # Step 2: Prepare the input tensor for training
-    input_tensor = torch.tensor(fluxes, dtype=torch.float32).unsqueeze(0).to(device)   # Shape: [1, 16, 10]
-    plt.plot(wavelengths,input_tensor[0,:,1].to("cpu"))
-    plt.title("real")
-    print(input_tensor.shape)
-    # Set model parameters
-    model_params = {
-        "input_dim": input_tensor.shape[1],
-        "time_steps": 1000,
-        "learning_rate": 0.001,
-    }
+# Device configuration
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # Initialize and train the model
-    from model import SelfGuidedTSDiff  # Assuming your model class is here
-    model = SelfGuidedTSDiff(input_dim=model_params["input_dim"]).to(device)
-    train_model(model, input_tensor, model_params)
+# Load and preprocess data
+spectra_file = '../../data/spectra.csv'
+photometry_file = '../../data/interpolated_spectra.csv'
 
-    # # Generate new flux data for a single galaxy
-    # # new_wavelength = torch.tensor(np.random.rand(1, 17, 1), dtype=torch.float32).to(device)  # Replace with actual new wavelengths
-    # new_wavelength = torch.tensor(wavelengths, dtype=torch.float32).unsqueeze(0).to(device)   # Shape: [1, 16, 10]
-    
-    # print(new_wavelength.shape)
-    # generated_fluxes = generate_fluxes(model, new_wavelength.unsqueeze(2))
-    # print(generated_fluxes.shape)
-    # # Step 3: Inverse transform the generated data to original scale
-    # generated_fluxes_np = generated_fluxes.squeeze(0).cpu().numpy().T  # Shape should now be (1, 16)
-    # print(generated_fluxes_np.shape)
-    # # # scaler = joblib.load('scaler.pkl')
-    # # # original_scale_fluxes = scaler.inverse_transform(generated_fluxes_np)  # Correct shape (1, 16)
+df_spectra = pd.read_csv(spectra_file).T
+data_sp = df_spectra.values.astype(np.float64)
+data_scaled_sp = data_sp / np.max(data_sp)
 
-    # # # Print evaluation metrics (compares a single real flux against generated)
-    # # print_evaluation(input_tensor.to("cpu"), generated_fluxes_np)
-    # # # Plot results for the single galaxy
-    # plot_generated_samples(wavelengths, generated_fluxes_np)
-    # plot_real_vs_generated(wavelengths, fluxes, generated_fluxes_np)
+df_photo = pd.read_csv(photometry_file).T
+data_ph = df_photo.values.astype(np.float64)
+data_scaled_ph = data_ph / np.max(data_ph)
 
-if __name__ == "__main__":
-    main()
+# Initialize dataset and DataLoader
+dataset = SpectraDataset(data_scaled_ph.T, data_scaled_sp.T)
+dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=True)
+
+# Initialize model, optimizer, and criterion
+model = SelfGuidedTSDiff(input_dim=input_dim, time_steps=time_steps).to(device)
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+criterion = torch.nn.MSELoss()
+
+# Initialize trainer and train the model
+trainer = Trainer(model, dataloader, device, criterion, optimizer)
+trainer.train(num_epochs)
+trainer.save_model('trained_model.pth')
+
+# Optionally: Evaluate and plot results
+model.load_state_dict(torch.load('trained_model.pth'))
+model.eval()
+
+real_spectra, photometry_data = next(iter(dataloader))
+test_photometry_data = torch.tensor(data_scaled_ph.T, dtype=torch.float32).unsqueeze(2).to(device)  # Reshape if necessary
+test_spectra_data = torch.tensor(data_scaled_sp.T, dtype=torch.float32).to(device)
+
+with torch.no_grad():
+    t = torch.randint(0, time_steps, (test_spectra_data.size(0),)).to(device)
+    generated_spectra = model(test_photometry_data.to(device), t)
+
+df_wavelengths = pd.read_csv("../../data/interpolated_spectra.csv").T
+df_wavelengths.reset_index(inplace=True)
+df_wavelengths.columns = range(len(df_wavelengths.columns))
+df_wavelengths = df_wavelengths.values.astype(np.float64)
+df_wavelengths_scaled = df_wavelengths / np.max(df_wavelengths)
+data_wavelengths_photo = df_wavelengths[:, 0] 
+photometry_wavelengths = data_wavelengths_photo
+
+df_wavelengths_spectra = pd.read_csv("../../data/spectra.csv").T
+df_wavelengths_spectra.reset_index(inplace=True)
+df_wavelengths_spectra.columns = range(len(df_wavelengths_spectra.columns))
+df_wavelengths_spectra = df_wavelengths_spectra.values.astype(np.float64)
+df_wavelengths_scaled_spectra = df_wavelengths_spectra / np.max(df_wavelengths_spectra)
+data_wavelengths_spectra = df_wavelengths_spectra[:, 0]
+spectra_wavelengths =  data_wavelengths_spectra 
+
+plot_spectra(test_spectra_data, test_photometry_data, generated_spectra, photometry_wavelengths, spectra_wavelengths)
