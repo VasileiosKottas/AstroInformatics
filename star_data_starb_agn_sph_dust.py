@@ -186,7 +186,9 @@ def create_data(iterations,**kwargs):
 
         #     # Write the row to the CSV
         #     writer.writerow(row_inter)
-
+    plt = kwargs.get('plot')
+    if plt == True:
+        plot_data(all_output_wave_lists[1], all_output_flux_lists[1], all_wave_inter_lists[1], all_flux_inter_lists[1])
     return output_wave_list, output_flux_list, wave_inter_list, flux_inter_list
 
 
@@ -196,7 +198,7 @@ def plot_data(output_wave_list, output_flux_list, wave_interpol, photometry):
     plt.figure()
     plt.plot(output_wave_list, output_flux_list, zorder=1)
     
-    plt.scatter(wave_interpol, photometry,s=10,c='red',zorder=2)
+    plt.scatter(wave_interpol, photometry,s=15,c='red',zorder=2)
     plt.legend(['Simulated Spectra','Photometry'])
     plt.ylabel('Normalized Flux (fv)')
     plt.xlabel("Wavelength (μm)")
