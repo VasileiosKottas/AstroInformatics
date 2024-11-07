@@ -8,7 +8,7 @@ from models.tsdiff import SelfGuidedTSDiff
 from hyperparameters import batch_size, num_epochs, learning_rate, input_dim, time_steps
 import numpy as np
 import pandas as pd
-
+import matplotlib.pyplot as plt
 class Trainer:
     def __init__(self, model, dataloader, device, criterion, optimizer):
         self.model = model
@@ -18,6 +18,8 @@ class Trainer:
         self.optimizer = optimizer
     
     def train(self, num_epochs):
+        losses = []
+        ep = []
         for epoch in range(num_epochs):
             self.model.train()
             epoch_loss = 0
@@ -43,8 +45,9 @@ class Trainer:
                 self.optimizer.step()
 
                 epoch_loss += loss.item()
-            
+            losses.append(epoch_loss)
+            ep.append(epoch)
             print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {epoch_loss / len(self.dataloader):.4f}")
-    
+        plt.plot(ep, losses, label='Loss', color='blue' , alpha=0.7)
     def save_model(self, path):
         torch.save(self.model.state_dict(), path)

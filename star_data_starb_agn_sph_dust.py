@@ -32,6 +32,7 @@ def create_data(iterations,**kwargs):
 
     # Extract the first column (micron values)
     filters = data[:, 0]
+    print(filters)
     if ulirgs == str('U5652'):
         redshift = 1.6180000305175781
     elif ulirgs == str('U16526'):
@@ -97,6 +98,7 @@ def create_data(iterations,**kwargs):
         # If photometry is enabled, process interpolated values
         if kwargs.get('photometry', False):
             observed_wave = filters / (1 + redshift)
+            print(observed_wave)
             wave_interpol = np.log10(observed_wave) if kwargs.get("log_wave", False) else observed_wave
             interpolation_function = interpolate.interp1d(
                 np.log10(wave_synth), np.log10(fall)
@@ -186,6 +188,7 @@ def create_data(iterations,**kwargs):
 
         #     # Write the row to the CSV
         #     writer.writerow(row_inter)
+    print(observed_wave)
     plt = kwargs.get('plot')
     if plt == True:
         plot_data(all_output_wave_lists[1], all_output_flux_lists[1], all_wave_inter_lists[1], all_flux_inter_lists[1])
