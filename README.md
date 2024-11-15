@@ -10,9 +10,9 @@ These models create the spectometry and using different filters in various redsh
 This model uses the method of [Time-series Generative Adversarial Networks](https://papers.nips.cc/paper_files/paper/2019/hash/c9efe5f26cd17ba6216bbe2a7d26d490-Abstract.html).
 The structure of the model is:
 
-<img src="image-2.png" width="440">
+<img src="Pictures/image-2.png" width="440">
 
 # Diffusion Model
 This models uses the method of []
 
-![alt text](image-1.png)
+![alt text](Pictures/image-1.png)
