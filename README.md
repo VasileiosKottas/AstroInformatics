@@ -13,6 +13,17 @@ The structure of the model is:
 <img src="Pictures/image-2.png" width="440">
 
 # Diffusion Model
-This models uses the method of []
+This models uses the method of [Predict, Refine, Synthesize: Self-Guiding Diffusion Models for Probabilistic Time Series Forecasting](https://paperswithcode.com/paper/predict-refine-synthesize-self-guiding)
 
 ![alt text](Pictures/image-1.png)
+
+# How to use
+## Generate data
+To generate the dataset first run the requirements_data.txt and then in the main.py select the number of galaxies to generate. The filters to generated the photometry and the AGN type.
+
+```pip install requirements_data.txt```
+
+```python -m main.py```
+
+The generated data will be in the folder data.
+
