@@ -188,7 +188,7 @@ def create_data(iterations,**kwargs):
 
         #     # Write the row to the CSV
         #     writer.writerow(row_inter)
-    print(observed_wave)
+    # print(observed_wave)
     plt = kwargs.get('plot')
     if plt == True:
         plot_data(all_output_wave_lists[1], all_output_flux_lists[1], all_wave_inter_lists[1], all_flux_inter_lists[1])
