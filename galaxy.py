@@ -147,7 +147,7 @@ class Galaxy:
         return f2
     
     def create_spheroid(self, models_fnu_full):
-                # Add the Spheroid
+        # Add the Spheroid
         tvv_r = random.uniform(galaxy_settings.tvv[0], galaxy_settings.tvv[1])
         psi_r = random.uniform(galaxy_settings.psi[0], galaxy_settings.psi[1])
         iview_r = random.uniform(galaxy_settings.iview[0], galaxy_settings.iview[1],)

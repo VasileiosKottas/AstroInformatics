@@ -27,3 +27,10 @@ To generate the dataset first run the requirements_data.txt and then in the main
 
 The generated data will be in the folder data.
 
+@software{2024ascl.soft06003V,
+   author = {{Varnava}, Charalambia and {Efstathiou}, Andreas},
+    title = "{SMART: Spectral energy distribution (SED) fitter}",
+  howpublished = {Astrophysics Source Code Library, record ascl:2406.003},
+     year = 2024,
+   eid = {ascl:2406.003},
+}
