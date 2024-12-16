@@ -46,28 +46,27 @@ class Trainer:
                 real_spectra = real_spectra.to(self.device)
                 photometry_data = photometry_data.to(self.device)
                 t = torch.randint(0, time_steps, (real_spectra.size(0),)).to(self.device)
-                photometry_data = photometry_data.unsqueeze(2)
+                photometry_data = photometry_data.unsqueeze(2)  # Ensure correct shape
 
                 # Forward pass
                 output = self.model(photometry_data, t)
 
+                # Debug shapes
+                print(f"Output shape: {output.shape}")
+                print(f"Real spectra shape: {real_spectra.shape}")
+
+                # Ensure target shape matches output
+                real_spectra = real_spectra.unsqueeze(2)  # Add a sequence length dimension
+
+
                 # Compute loss
                 loss = self.criterion(output, real_spectra)
-
-                # Metrics
-                mse = mean_squared_error(real_spectra.cpu().numpy(), output.detach().cpu().numpy())
-                mae = mean_absolute_error(real_spectra.cpu().numpy(), output.detach().cpu().numpy())
-                crps_score = self.crps(real_spectra, output)
 
                 # Backpropagation
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
 
-                epoch_loss += loss.item()
-                epoch_mse += mse
-                epoch_mae += mae
-                epoch_crps += crps_score.item()
 
             # Log metrics
             losses.append(epoch_loss / len(self.dataloader))

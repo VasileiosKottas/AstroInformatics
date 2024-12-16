@@ -1,14 +1,20 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
+import numpy as np
+
+import matplotlib.pyplot as plt
+import numpy as np
+
 def plot_spectra(real_spectra, photometry, generated_spectra, photometry_wavelengths, spectra_wavelengths, index=0):
     # Extract data for the given index
     real_spectra = real_spectra[index].detach().cpu().numpy()
-    generated_spectra = generated_spectra[index].detach().cpu().numpy()
+    generated_spectra = generated_spectra[index].mean(axis=0).detach().cpu().numpy()  # Average across channels
     photometry = photometry[index].detach().cpu().numpy()
 
     # Ensure wavelengths are numerical and sorted
     photometry_wavelengths = np.array(photometry_wavelengths, dtype=np.float32)
-    spectra_wavelengths = np.array(spectra_wavelengths, dtype=np.float32)
+    spectra_wavelengths = np.array(spectra_wavelengths[:real_spectra.shape[0]], dtype=np.float32)  # Match lengths
 
     # Plot spectrometry (real and generated)
     plt.figure(figsize=(10, 6))
@@ -29,4 +35,5 @@ def plot_spectra(real_spectra, photometry, generated_spectra, photometry_wavelen
     plt.legend()
     plt.grid(True)
     plt.show()
+
 

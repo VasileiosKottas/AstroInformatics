@@ -28,7 +28,7 @@ class TSDiff(nn.Module):
         # Transformer Layer
         self.transformer_layer = nn.Transformer(d_model=d_model, nhead=nhead, num_encoder_layers=num_encoder_layers)
 
-        # Output Layer
+        # Conv Layer
         self.output_conv = nn.Conv1d(in_channels=d_model, out_channels=206, kernel_size=1)
 
     def forward_diffusion_sample(self, x0, t):
@@ -38,27 +38,37 @@ class TSDiff(nn.Module):
         return sqrt_alpha_bar * x0 + sqrt_one_minus_alpha_bar * noise, noise
 
     def forward(self, x, t):
+        print(f"Forward input shape: {x.shape}")
         x = self.initial_conv(x)
+        print(f"Shape after initial_conv: {x.shape}")
+        
         for block in self.residual_blocks:
             x = block(x)
-
-        # Project to d_model dimensions
+        print(f"Shape after residual blocks: {x.shape}")
+        
+        # Transformer
         x = self.to_d_model(x.permute(0, 2, 1))  # [batch, seq_len, d_model]
         x = x.permute(1, 0, 2)  # [seq_len, batch, d_model]
-
-        # Pass through the Transformer layer
         x = self.transformer_layer(x, x)
         x = x.permute(1, 2, 0)  # [batch, d_model, seq_len]
+        print(f"Shape after transformer: {x.shape}")
 
-        # Output Convolution
+        # Output
         output = self.output_conv(x)
-
-        # Reshape to match [batch_size, 206]
-        output = output.squeeze(2)  # Squeeze the sequence length if it is 1 to match real_spectra
+        print(f"Shape after output_conv: {output.shape}")
         return output
 
+
+
     def denoise(self, noisy_x, t):
+        print(f"Denoise input shape: {noisy_x.shape}")  # Debugging
         predicted_noise = self.forward(noisy_x, t)
+        
+        # Ensure the output shape matches the model's expected input shape
+        if predicted_noise.size(1) != 17:  # If channels are not 17, reshape
+            predicted_noise = predicted_noise[:, :17, :]  # Slice to match required shape
+
+        print(f"Denoise output shape: {predicted_noise.shape}")  # Debugging
         return predicted_noise
 
 class SelfGuidedTSDiff(nn.Module):
@@ -74,4 +84,17 @@ class SelfGuidedTSDiff(nn.Module):
         return eps_hat
 
     def denoise(self, noisy_x, t):
+        print("Denoise in Self",noisy_x.shape)
         return self.ts_diff.denoise(noisy_x, t)
+    
+    def sample(self, num_samples, device, sequence_length=1):
+        # Initialize noise with the correct number of input channels (17)
+        noise = torch.randn((17, 206)).to(device)
+        
+        # Perform reverse diffusion through the model
+        for t in reversed(range(self.ts_diff.time_steps)):
+            
+            
+            noise = self.ts_diff.denoise(noise, t)
+        
+        return noise
