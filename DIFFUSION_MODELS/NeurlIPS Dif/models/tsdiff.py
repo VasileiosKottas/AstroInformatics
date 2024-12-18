@@ -40,22 +40,22 @@ class TSDiff(nn.Module):
     def forward(self, x, t):
         print(f"Forward input shape: {x.shape}")
         x = self.initial_conv(x)
-        print(f"Shape after initial_conv: {x.shape}")
+        # print(f"Shape after initial_conv: {x.shape}")
         
         for block in self.residual_blocks:
             x = block(x)
-        print(f"Shape after residual blocks: {x.shape}")
+        # print(f"Shape after residual blocks: {x.shape}")
         
         # Transformer
         x = self.to_d_model(x.permute(0, 2, 1))  # [batch, seq_len, d_model]
         x = x.permute(1, 0, 2)  # [seq_len, batch, d_model]
         x = self.transformer_layer(x, x)
         x = x.permute(1, 2, 0)  # [batch, d_model, seq_len]
-        print(f"Shape after transformer: {x.shape}")
+        # print(f"Shape after transformer: {x.shape}")
 
         # Output
         output = self.output_conv(x)
-        print(f"Shape after output_conv: {output.shape}")
+        # print(f"Shape after output_conv: {output.shape}")
         return output
 
 

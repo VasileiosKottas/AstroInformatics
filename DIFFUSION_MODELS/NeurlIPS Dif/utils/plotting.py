@@ -34,6 +34,8 @@ def plot_spectra(real_spectra, photometry, generated_spectra, photometry_wavelen
 
     plt.legend()
     plt.grid(True)
+    plt.savefig("generated_spectra_plot.png")  # Save the plot as a file
+
     plt.show()
 
 

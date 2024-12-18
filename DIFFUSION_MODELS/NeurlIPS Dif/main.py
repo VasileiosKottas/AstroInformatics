@@ -10,22 +10,61 @@ import pandas as pd
 import numpy as np
 import os
 
-# Device configuration
+# # Device configuration
 # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-device = torch.device("cpu")
-# Paths for data
-spectra_file = '../../data/spectra.csv'
-photometry_file = '../../data/interpolated_spectra.csv'
+# # device = torch.device("cpu")
+# # Paths for data
+# spectra_file = '../../data/spectra.csv'
+# photometry_file = '../../data/interpolated_spectra.csv'
 
-# Load and preprocess data
-df_spectra = pd.read_csv(spectra_file).T
+# # Load and preprocess data
+# df_spectra = pd.read_csv(spectra_file).T
+# data_sp = df_spectra.values.astype(np.float64)
+# data_scaled_sp = data_sp / np.max(data_sp)
+
+# df_photo = pd.read_csv(photometry_file).T
+# data_ph = df_photo.values.astype(np.float64)
+# data_scaled_ph = data_ph / np.max(data_sp)
+df_spectra = pd.read_csv('../../data/spectra.csv').T
+print(df_spectra.shape)
+df_spectra.reset_index(inplace=False)
+df_spectra.columns = range(len(df_spectra.columns))
 data_sp = df_spectra.values.astype(np.float64)
+print(data_sp.shape)
 data_scaled_sp = data_sp / np.max(data_sp)
+# Separate wavelengths and fluxes
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-df_photo = pd.read_csv(photometry_file).T
+# Assuming `data` is your dataset with shape [17, 10001]
+# wavelengths = data[:, 0]  # Shape: [17]
+fluxes_sp = data_sp[:, :]  # Transpose to get shape [10000, 17]
+print(fluxes_sp.shape)
+# Prepare inputs for the model
+df_photo = pd.read_csv('../../data/interpolated_spectra.csv').T
+print(df_photo.shape)
+df_photo.reset_index(inplace=False)
+df_photo.columns = range(len(df_spectra.columns))
 data_ph = df_photo.values.astype(np.float64)
-data_scaled_ph = data_ph / np.max(data_sp)
+print(data_ph.shape)
+data_scaled_ph = data_ph / np.max(data_ph)
+# Separate wavelengths and fluxes
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+# Assuming `data` is your dataset with shape [17, 10001]
+df_wavelengths = pd.read_csv("../../data/interpolated_spectra.csv").T
+df_wavelengths.reset_index(inplace=True)
+df_wavelengths.columns = range(len(df_wavelengths.columns))
+df_wavelengths = df_wavelengths.values.astype(np.float64)
+df_wavelengths_scaled = df_wavelengths / np.max(df_wavelengths)
+data_wavelengths_photo = df_wavelengths[:, 0]  # Shape: [17]
+fluxes_ph = data_ph[:, 0:]  # Transpose to get shape [10000, 17]
+# Spectra
+df_wavelengths_spectra = pd.read_csv("../../data/spectra.csv").T
+df_wavelengths_spectra.reset_index(inplace=True)
+df_wavelengths_spectra.columns = range(len(df_wavelengths_spectra.columns))
+df_wavelengths_spectra = df_wavelengths_spectra.values.astype(np.float64)
+df_wavelengths_scaled_spectra = df_wavelengths_spectra / np.max(df_wavelengths_spectra)
+data_wavelengths_spectra = df_wavelengths_spectra[:, 0] 
 # Initialize dataset
 dataset = SpectraDataset(data_scaled_ph.T, data_scaled_sp.T)
 
@@ -66,7 +105,7 @@ def evaluate_on_test(model, test_dataloader, device):
             photometry_data = photometry_data.to(device).unsqueeze(2)  # Add sequence dimension
 
             # Start denoising from Gaussian noise
-            batch_size = real_spectra.size(0)  # Get batch size
+            # batch_size = real_spectra.size(0)  # Get batch size
             noise = torch.randn((batch_size, 17, 206)).to(device)  # Match model input
             for t in reversed(range(time_steps)):
                 t_tensor = torch.full((batch_size,), t, device=device, dtype=torch.long)
@@ -88,8 +127,8 @@ for i in range(1):  # Visualize 5 examples
         real_spectra=real_spectra,
         photometry=photometry,
         generated_spectra=generated_spectra,
-        photometry_wavelengths=data_scaled_ph[0],  # Replace with photometry wavelengths
-        spectra_wavelengths=data_scaled_sp[0],     # Replace with spectra wavelengths
+        photometry_wavelengths=data_wavelengths_photo,  # Replace with photometry wavelengths
+        spectra_wavelengths=data_wavelengths_spectra,     # Replace with spectra wavelengths
         index=i
     )
 
