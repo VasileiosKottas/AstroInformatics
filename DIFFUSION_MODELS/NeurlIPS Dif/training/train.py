@@ -43,30 +43,48 @@ class Trainer:
             epoch_loss, epoch_mse, epoch_mae, epoch_crps = 0, 0, 0, 0
 
             for real_spectra, photometry_data in self.dataloader:
+                # Debugging inputs
+                print(f"Real spectra shape: {real_spectra.shape}, Photometry shape: {photometry_data.shape}")
+
                 real_spectra = real_spectra.to(self.device)
                 photometry_data = photometry_data.to(self.device)
                 t = torch.randint(0, time_steps, (real_spectra.size(0),)).to(self.device)
-                photometry_data = photometry_data.unsqueeze(2)  # Ensure correct shape
+                photometry_data = photometry_data.unsqueeze(2)
 
                 # Forward pass
                 output = self.model(photometry_data, t)
-
-                # Debug shapes
-                print(f"Output shape: {output.shape}")
-                print(f"Real spectra shape: {real_spectra.shape}")
-
-                # Ensure target shape matches output
-                real_spectra = real_spectra.unsqueeze(2)  # Add a sequence length dimension
-
+                print(f"Model output shape: {output.shape}")
 
                 # Compute loss
-                loss = self.criterion(output, real_spectra)
+                loss = self.criterion(output.squeeze(), real_spectra)
+                print(f"Loss value: {loss.item()}")
+
+                # Metrics
+                                # Squeeze to remove the last singleton dimension
+                real_spectra_np = real_spectra.squeeze(-1).cpu().numpy()
+                output_np = output.squeeze(-1).detach().cpu().numpy()
+
+                # Compute MSE
+                mse = mean_squared_error(real_spectra_np, output_np)
+
+                mae = mean_absolute_error(real_spectra.cpu().numpy(), output.detach().cpu().numpy())
+                crps_score = self.crps(real_spectra, output)
 
                 # Backpropagation
                 self.optimizer.zero_grad()
                 loss.backward()
+
+                # Debugging gradients
+                for name, param in self.model.named_parameters():
+                    if param.grad is not None:
+                        print(f"Gradient for {name}: {param.grad.norm()}")
+
                 self.optimizer.step()
 
+                epoch_loss += loss.item()
+                epoch_mse += mse
+                epoch_mae += mae
+                epoch_crps += crps_score.item()
 
             # Log metrics
             losses.append(epoch_loss / len(self.dataloader))
@@ -74,7 +92,8 @@ class Trainer:
             maes.append(epoch_mae / len(self.dataloader))
             crps_scores.append(epoch_crps / len(self.dataloader))
 
-            tqdm.write(f"Epoch [{epoch + 1}/{num_epochs}] Loss: {losses[-1]:.4f}, MSE: {mses[-1]:.4f}, MAE: {maes[-1]:.4f}, CRPS: {crps_scores[-1]:.4f}")
+            print(f"Epoch [{epoch + 1}/{num_epochs}] Loss: {losses[-1]:.4f}, MSE: {mses[-1]:.4f}, MAE: {maes[-1]:.4f}, CRPS: {crps_scores[-1]:.4f}")
+
 
         # Save plots for each metric
         self.save_plot(range(num_epochs), losses, "Epoch", "Loss", "Training Loss", os.path.join(self.output_dir, "loss_plot.png"))

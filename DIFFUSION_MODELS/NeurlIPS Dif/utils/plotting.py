@@ -12,9 +12,17 @@ def plot_spectra(real_spectra, photometry, generated_spectra, photometry_wavelen
     generated_spectra = generated_spectra[index].mean(axis=0).detach().cpu().numpy()  # Average across channels
     photometry = photometry[index].detach().cpu().numpy()
 
-    # Ensure wavelengths are numerical and sorted
-    photometry_wavelengths = np.array(photometry_wavelengths, dtype=np.float32)
-    spectra_wavelengths = np.array(spectra_wavelengths[:real_spectra.shape[0]], dtype=np.float32)  # Match lengths
+    # Ensure photometry is 1D and matches wavelengths
+    photometry = photometry.squeeze(-1)  # Remove the extra dimension
+    photometry_wavelengths = np.array(photometry_wavelengths[:len(photometry)], dtype=np.float32)
+    spectra_wavelengths = np.array(spectra_wavelengths[:real_spectra.shape[0]], dtype=np.float32)
+
+    # Debugging to confirm shapes
+    print(f"Real spectra shape: {real_spectra.shape}")
+    print(f"Generated spectra shape: {generated_spectra.shape}")
+    print(f"Photometry shape: {photometry.shape}")
+    print(f"Photometry wavelengths shape: {photometry_wavelengths.shape}")
+    print(f"Spectra wavelengths shape: {spectra_wavelengths.shape}")
 
     # Plot spectrometry (real and generated)
     plt.figure(figsize=(10, 6))
@@ -27,15 +35,10 @@ def plot_spectra(real_spectra, photometry, generated_spectra, photometry_wavelen
     plt.xlabel('Wavelength (µm)')
     plt.ylabel('Flux')
     plt.title('Real vs. Generated Spectra with Photometry Points')
-
-    # Rotate x-axis ticks and improve readability
-    plt.xticks(rotation=0)
-    plt.tick_params(axis='x', which='major', labelsize=8)
-
     plt.legend()
     plt.grid(True)
-    plt.savefig("generated_spectra_plot.png")  # Save the plot as a file
 
-    plt.show()
-
+    # Save the plot to a file
+    plt.savefig(f"generated_spectra_index_{index}.png")
+    plt.close()
 

@@ -38,7 +38,7 @@ class TSDiff(nn.Module):
         return sqrt_alpha_bar * x0 + sqrt_one_minus_alpha_bar * noise, noise
 
     def forward(self, x, t):
-        print(f"Forward input shape: {x.shape}")
+        # print(f"Forward input shape: {x.shape}")
         x = self.initial_conv(x)
         # print(f"Shape after initial_conv: {x.shape}")
         
@@ -61,14 +61,14 @@ class TSDiff(nn.Module):
 
 
     def denoise(self, noisy_x, t):
-        print(f"Denoise input shape: {noisy_x.shape}")  # Debugging
+        # print(f"Denoise input shape: {noisy_x.shape}")  # Debugging
         predicted_noise = self.forward(noisy_x, t)
         
         # Ensure the output shape matches the model's expected input shape
         if predicted_noise.size(1) != 17:  # If channels are not 17, reshape
             predicted_noise = predicted_noise[:, :17, :]  # Slice to match required shape
 
-        print(f"Denoise output shape: {predicted_noise.shape}")  # Debugging
+        # print(f"Denoise output shape: {predicted_noise.shape}")  # Debugging
         return predicted_noise
 
 class SelfGuidedTSDiff(nn.Module):
@@ -84,7 +84,7 @@ class SelfGuidedTSDiff(nn.Module):
         return eps_hat
 
     def denoise(self, noisy_x, t):
-        print("Denoise in Self",noisy_x.shape)
+        # print("Denoise in Self",noisy_x.shape)
         return self.ts_diff.denoise(noisy_x, t)
     
     def sample(self, num_samples, device, sequence_length=1):

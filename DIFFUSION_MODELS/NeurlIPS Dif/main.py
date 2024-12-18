@@ -26,11 +26,11 @@ import os
 # data_ph = df_photo.values.astype(np.float64)
 # data_scaled_ph = data_ph / np.max(data_sp)
 df_spectra = pd.read_csv('../../data/spectra.csv').T
-print(df_spectra.shape)
+# print(df_spectra.shape)
 df_spectra.reset_index(inplace=False)
 df_spectra.columns = range(len(df_spectra.columns))
 data_sp = df_spectra.values.astype(np.float64)
-print(data_sp.shape)
+# print(data_sp.shape)
 data_scaled_sp = data_sp / np.max(data_sp)
 # Separate wavelengths and fluxes
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -38,14 +38,14 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Assuming `data` is your dataset with shape [17, 10001]
 # wavelengths = data[:, 0]  # Shape: [17]
 fluxes_sp = data_sp[:, :]  # Transpose to get shape [10000, 17]
-print(fluxes_sp.shape)
+# print(fluxes_sp.shape)
 # Prepare inputs for the model
 df_photo = pd.read_csv('../../data/interpolated_spectra.csv').T
-print(df_photo.shape)
+# print(df_photo.shape)
 df_photo.reset_index(inplace=False)
 df_photo.columns = range(len(df_spectra.columns))
 data_ph = df_photo.values.astype(np.float64)
-print(data_ph.shape)
+# print(data_ph.shape)
 data_scaled_ph = data_ph / np.max(data_ph)
 # Separate wavelengths and fluxes
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -122,7 +122,8 @@ def evaluate_on_test(model, test_dataloader, device):
 real_spectra, generated_spectra, photometry = evaluate_on_test(model, test_dataloader, device)
 
 # Plot a few test results
-for i in range(1):  # Visualize 5 examples
+for i in range(1):
+      # Visualize 5 examples
     plot_spectra(
         real_spectra=real_spectra,
         photometry=photometry,
