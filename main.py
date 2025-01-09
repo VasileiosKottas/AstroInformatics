@@ -11,4 +11,4 @@ if __name__ == "__main__":
     
     num_galaxies = 10000
     
-    create_data(num_galaxies, plot=True, ULIRG = ULIRG[3], agntype = 'cygnus', photometry = True, log_wave = True)
+    create_data(num_galaxies, plot=True, ULIRG = ULIRG[3], agntype = 'cygnus', photometry = True, log_wave = False)
