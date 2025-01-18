@@ -75,17 +75,18 @@ def create_data(iterations, **kwargs):
 
         # Check if all flux values are positive
         if np.all(fall > 0):
+            fall_log = np.log10(fall) 
             output_wave_list = wave_synth[wave_synth < 1200]
-            output_flux_list = fall[wave_synth < 1200]
+            output_flux_list = fall_log[wave_synth < 1200]
 
             # Perform photometry if enabled
             if kwargs.get('photometry', False):
                 observed_wave = filters / (1 + redshift)
-                interpolation_function = interpolate.interp1d(wave_synth, fall, bounds_error=False, fill_value=np.nan)
+                interpolation_function = interpolate.interp1d(wave_synth, fall_log, bounds_error=False, fill_value=np.nan)
                 photometry = interpolation_function(observed_wave)
-                if np.all(photometry > 0):
-                    positive_wave_inter_lists.append(observed_wave)
-                    positive_flux_inter_lists.append(photometry)
+                # if np.all(photometry > 0):
+                positive_wave_inter_lists.append(observed_wave)
+                positive_flux_inter_lists.append(photometry)
 
             positive_output_wave_lists.append(output_wave_list)
             positive_output_flux_lists.append(output_flux_list)

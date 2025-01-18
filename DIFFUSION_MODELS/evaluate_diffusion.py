@@ -47,15 +47,20 @@ def evaluate_model(model, test_dataloader, device, spectra_wavelengths, photomet
     plt.grid(True)
     plt.savefig("chi2_distribution_diffusion.png")
     plt.show()
+    valid_spectra_indices = spectra_wavelengths < 35
+    valid_photometry_indices = photometry_wavelengths < 35
+
+    filtered_spectra_wavelengths = spectra_wavelengths[valid_spectra_indices]
+    filtered_photometry_wavelengths = photometry_wavelengths[valid_photometry_indices]
 
     # Visualise spectra
     for i in range(5):  # Plot first 5 samples
         plot_spectra(
-            real_spectra=all_real_spectra,
-            photometry=all_photometry_data,
-            generated_spectra=all_generated_spectra,
-            photometry_wavelengths=photometry_wavelengths,
-            spectra_wavelengths=spectra_wavelengths,
+            real_spectra=all_real_spectra[:, valid_spectra_indices],
+            photometry=all_photometry_data[:, valid_photometry_indices],
+            generated_spectra=all_generated_spectra[:, valid_spectra_indices],
+            photometry_wavelengths=filtered_photometry_wavelengths,
+            spectra_wavelengths=filtered_spectra_wavelengths,
             index=i
         )
 
