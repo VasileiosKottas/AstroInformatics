@@ -1,7 +1,7 @@
 # main.py
 import sys
 from config.hyperparameters import *
-from src.train import train_model
+# from src.train import train_model
 from src.evaluate import evaluate_model
 from src.model import PhotometryToSpectraModel
 from src.data_loader import load_data, load_data_eval
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         transformer_nhead=TRANSFORMER_NHEAD,
         transformer_layers=TRANSFORMER_LAYERS
     ).to(device)
-    model.load_state_dict(torch.load("./gan_model.pth"))
+    model.load_state_dict(torch.load("gan_model.pth", map_location=torch.device('cpu')))  # Load model on CPU if CUDA is unavailable
     print("Model loaded successfully.")
     
     # Step 3: Evaluate the model
