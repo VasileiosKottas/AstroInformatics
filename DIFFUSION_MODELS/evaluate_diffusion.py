@@ -54,14 +54,20 @@ def evaluate_model(model, test_dataloader, device, spectra_wavelengths, photomet
     # Extract chi-squared values for the selected galaxies
     selected_chi2_values = chi2_values[random_indices]
 
-    # Filter chi-squared values to include only those < 5
+    # Calculate the percentage of chi-squared values under 5
     filtered_chi2_values = selected_chi2_values[selected_chi2_values < 5]
+    percentage_chi2_under_5 = (filtered_chi2_values.shape[0] / selected_chi2_values.shape[0]) * 100
+
+    # Calculate the percentage of chi-squared values over 5
+    percentage_chi2_over_5 = 100 - percentage_chi2_under_5
 
     # Calculate evaluation metrics
     mse = mean_squared_error(all_real_spectra.cpu().numpy(), all_generated_spectra.cpu().numpy())
     chi2_mean = torch.mean(filtered_chi2_values).item()
 
     print(f"Evaluation Metrics:\nMSE: {mse:.6f}\nChi^2 Mean: {chi2_mean:.6f}")
+    print(f"Percentage of Chi^2 < 5: {percentage_chi2_under_5:.2f}%")
+    print(f"Percentage of Chi^2 > 5: {percentage_chi2_over_5:.2f}%")
 
     # Plot Chi-Squared distribution for filtered values
     plt.figure(figsize=(8, 5))
@@ -83,28 +89,25 @@ def evaluate_model(model, test_dataloader, device, spectra_wavelengths, photomet
     plt.savefig("chi2_distribution_random_samples.png")
     plt.show()
 
-    # Create a single plot with 6 subplots for the first 6 samples
-    fig, axes = plt.subplots(2, 3, figsize=(15, 10))  # 2 rows, 3 columns for 6 samples
-    axes = axes.flatten()  # Flatten to make indexing easier
+    # Create a single plot for one sample
+    i = 0  # Select the first sample
+    real_sample = all_real_spectra[random_indices[i], :].cpu().numpy()
+    photometry_data = all_photometry_data[random_indices[i], :].cpu().numpy()
+    generated_sample = all_generated_spectra[random_indices[i], :].cpu().numpy()
 
-    for i in range(6):  # Plot the first 6 samples
-        real_sample = all_real_spectra[random_indices[i], :].cpu().numpy()
-        photometry_data = all_photometry_data[random_indices[i], :].cpu().numpy()
-        generated_sample = all_generated_spectra[random_indices[i], :].cpu().numpy()
+    plt.figure(figsize=(8, 6))
+    plt.plot(filtered_spectra_wavelengths, real_sample, label='Real Spectra', color='blue')
+    plt.plot(filtered_spectra_wavelengths, generated_sample, label='Generated Spectra', linestyle='--', color='orange')
+    plt.scatter(filtered_photometry_wavelengths, photometry_data, label='Photometry', color='red', zorder=3)
 
-        axes[i].plot(filtered_spectra_wavelengths, real_sample, label='Real Spectra')
-        axes[i].plot(filtered_spectra_wavelengths, generated_sample, label='Generated Spectra', linestyle='--')
-        axes[i].scatter(filtered_photometry_wavelengths, photometry_data, label='Photometry', color='red')
-        axes[i].set_title(f'Galaxy {i+1}')
-        axes[i].set_xlabel('Wavelength (µm)')
-        axes[i].set_ylabel('Flux')
-        axes[i].legend()
-        axes[i].grid(True)
-
-    # Adjust layout and save the combined plot with 6 subplots
-    plt.tight_layout()
-    plt.savefig("Diffusion_eval_with_metrics_subplots.png")  # Save the combined figure with 6 subplots
+    plt.title('Galaxy')
+    plt.xlabel('Wavelength (µm)')
+    plt.ylabel('Flux')
+    plt.legend()
+    plt.grid(True)
     plt.show()
+
+
 
 if __name__ == "__main__":
     # Device configuration
