@@ -113,12 +113,22 @@ def eval_test_plotter(eval_output, cond_mask, sorted_wavelengths, valid_dataset,
     observed_data_region = observed_data_x[i:-j]
     
     sorted_wavelengths_region = sorted_wavelengths[i:-j]
-
+    
+    # Filter for wavelengths < 35
+    mask = sorted_wavelengths_region < 35
+    sorted_wavelengths_region = sorted_wavelengths_region[mask]
+    samples_region = samples_region[mask]
+    observed_data_region = observed_data_region[mask]
+    
     plt.figure(figsize=(10, 6))
-    plt.plot(sorted_wavelengths_region, samples_region, c = "blue", linewidth = 1)
-    plt.plot(sorted_wavelengths_region, observed_data_region, c = "red", linewidth = 1)
-    
-    
+    plt.plot(sorted_wavelengths_region, samples_region, c="blue", linewidth=1)
+    plt.plot(sorted_wavelengths_region, observed_data_region, c="red", linewidth=1)
+    plt.xlabel("Wavelengths")
+    plt.ylabel("Flux")
+    plt.title("Sample vs Observed Data for Wavelengths < 35")
+    plt.grid(True)
+    plt.show()
+
     #plt.scatter(filtered_wavelengths, filtered_cond_data , c = "green", s=6)
     
 
@@ -150,6 +160,16 @@ def error_chi_squared(eval_output, cond_mask, valid_dataset, i = 35, j = 4):
             counter += 1
         
     chi_under_5 = 100* counter/size
+    
+        # Plot histogram
+    plt.figure(figsize=(8, 5))
+    plt.hist(chi_squared, bins=30, color='orange', alpha=0.7, edgecolor='black')
+    plt.xlabel('Chi-Squared Value')
+    plt.ylabel('Frequency')
+    plt.title('Histogram of Chi-Squared Values')
+    plt.grid(True)
+    plt.show()
+    
     
     return chi_squared, chi_under_5
 
