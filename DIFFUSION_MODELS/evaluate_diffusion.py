@@ -20,6 +20,7 @@ def calculate_chi2(real_spectra, generated_spectra):
 def evaluate_model(model, test_dataloader, device, spectra_wavelengths, photometry_wavelengths):
     model.eval()
     all_real_spectra, all_generated_spectra, all_photometry_data = [], [], []
+    
     with torch.no_grad():
         for photometry_data, real_spectra in test_dataloader:
             photometry_data, real_spectra = photometry_data.to(device), real_spectra.to(device)
@@ -47,18 +48,11 @@ def evaluate_model(model, test_dataloader, device, spectra_wavelengths, photomet
     # Calculate chi-squared values
     chi2_values = calculate_chi2(all_real_spectra, all_generated_spectra)
 
-    # Select 100 random galaxies (samples)
-    num_samples = 100
-    random_indices = random.sample(range(len(all_real_spectra)), num_samples)
-
-    # Extract chi-squared values for the selected galaxies
-    selected_chi2_values = chi2_values[random_indices]
+    # Filter chi-squared values under 5
+    filtered_chi2_values = chi2_values[chi2_values < 5]
 
     # Calculate the percentage of chi-squared values under 5
-    filtered_chi2_values = selected_chi2_values[selected_chi2_values < 5]
-    percentage_chi2_under_5 = (filtered_chi2_values.shape[0] / selected_chi2_values.shape[0]) * 100
-
-    # Calculate the percentage of chi-squared values over 5
+    percentage_chi2_under_5 = (filtered_chi2_values.shape[0] / chi2_values.shape[0]) * 100
     percentage_chi2_over_5 = 100 - percentage_chi2_under_5
 
     # Calculate evaluation metrics
@@ -69,43 +63,46 @@ def evaluate_model(model, test_dataloader, device, spectra_wavelengths, photomet
     print(f"Percentage of Chi^2 < 5: {percentage_chi2_under_5:.2f}%")
     print(f"Percentage of Chi^2 > 5: {percentage_chi2_over_5:.2f}%")
 
-    # Plot Chi-Squared distribution for filtered values
+    # Plot histogram of chi-squared values under 5 for all galaxies
     plt.figure(figsize=(8, 5))
-    plt.hist(filtered_chi2_values.cpu().numpy(), bins=30, color='orange', alpha=0.7)
+    plt.hist(chi2_values.cpu().numpy(), bins=30, color='blue', alpha=0.7)
     plt.xlabel('Chi-Squared Value')
     plt.ylabel('Frequency')
-    plt.title('Chi-Squared Value Distribution (Filtered χ² < 5)')
+    plt.title('Chi-Squared Value Distribution (All Galaxies, χ² < 5)')
     plt.grid(True)
-    plt.savefig("chi2_distribution_filtered.png")
-    plt.show()
-
-    # Create a histogram for the chi-squared values from the random samples
-    plt.figure(figsize=(8, 5))
-    plt.hist(selected_chi2_values.cpu().numpy(), bins=30, color='blue', alpha=0.7)
-    plt.xlabel('Chi-Squared Value')
-    plt.ylabel('Frequency')
-    plt.title('Chi-Squared Value Distribution (Random Samples)')
-    plt.grid(True)
-    plt.savefig("chi2_distribution_random_samples.png")
+    plt.savefig("chi2_distribution_all_filtered.png")
     plt.show()
 
     # Create a single plot for one sample
     i = 0  # Select the first sample
-    real_sample = all_real_spectra[random_indices[i], :].cpu().numpy()
-    photometry_data = all_photometry_data[random_indices[i], :].cpu().numpy()
-    generated_sample = all_generated_spectra[random_indices[i], :].cpu().numpy()
+    real_sample = all_real_spectra[i, :].cpu().numpy()
+    photometry_data = all_photometry_data[i, :].cpu().numpy()
+    generated_sample = all_generated_spectra[i, :].cpu().numpy()
 
-    plt.figure(figsize=(8, 6))
-    plt.plot(filtered_spectra_wavelengths, real_sample, label='Real Spectra', color='blue')
-    plt.plot(filtered_spectra_wavelengths, generated_sample, label='Generated Spectra', linestyle='--', color='orange')
-    plt.scatter(filtered_photometry_wavelengths, photometry_data, label='Photometry', color='red', zorder=3)
-
-    plt.title('Galaxy')
-    plt.xlabel('Wavelength (µm)')
-    plt.ylabel('Flux')
-    plt.legend()
-    plt.grid(True)
+    # Plot six sample galaxies in six subplots including photometry
+    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+    axes = axes.flatten()
+    
+    for i in range(6):
+        real_sample = all_real_spectra[i, :].cpu().numpy()
+        generated_sample = all_generated_spectra[i, :].cpu().numpy()
+        photometry_sample = all_photometry_data[i, :].cpu().numpy()
+        
+        ax = axes[i]
+        ax.plot(filtered_spectra_wavelengths, real_sample, label='Real Spectra', linestyle='-')
+        ax.plot(filtered_spectra_wavelengths, generated_sample, label='Generated Spectra', linestyle='--', color='orange')
+        ax.scatter(filtered_photometry_wavelengths, photometry_sample, label='Photometry', marker='o', color='red')
+        
+        ax.set_xlabel('Wavelength (µm)')
+        ax.set_ylabel('Flux')
+        ax.set_title(f'Galaxy {i+1}')
+        ax.legend()
+        ax.grid(True)
+    
+    plt.tight_layout()
     plt.show()
+
+    plt.savefig("Six_galaxies.png")
 
 
 

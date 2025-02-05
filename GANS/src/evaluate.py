@@ -46,26 +46,26 @@ def evaluate_model(model, test_photometry_data, test_spectra_data, photometry_wa
         chi2_values = calculate_chi2(test_spectra_data, generated_spectra)
 
         # Create a single plot with 6 subplots for the first 6 samples
-        fig, axes = plt.subplots(2, 3, figsize=(15, 10))  # 2 rows, 3 columns for 6 samples
-        axes = axes.flatten()  # Flatten to make indexing easier
+        # fig, axes = plt.subplots(2, 3, figsize=(15, 10))  # 2 rows, 3 columns for 6 samples
+        # axes = axes.flatten()  # Flatten to make indexing easier
 
         # Loop over the first 6 samples to plot each
-        for i in range(6):
-            real_sample = test_spectra_data[i, :].cpu().numpy()
-            photometry_data = test_photometry_data[i, :].cpu().numpy()
-            generated_sample = generated_spectra[i, :].cpu().numpy()
+        i=0
+        real_sample = test_spectra_data[i, :].cpu().numpy()
+        photometry_data = test_photometry_data[i, :].cpu().numpy()
+        generated_sample = generated_spectra[i, :].cpu().numpy()
 
-            axes[i].plot(filtered_spectra_wavelengths, real_sample, label='Real Spectra')
-            axes[i].plot(filtered_spectra_wavelengths, generated_sample, label='Generated Spectra', linestyle='--')
-            axes[i].scatter(filtered_photometry_wavelengths, photometry_data, label='Photometry', color='red')
-            axes[i].set_title(f'Galaxy {i+1}')
-            axes[i].set_xlabel('Wavelength (µm)')
-            axes[i].set_ylabel('Flux')
-            axes[i].legend()
-            axes[i].grid(True)
+        plt.plot(filtered_spectra_wavelengths, real_sample, label='Real Spectra')
+        plt.plot(filtered_spectra_wavelengths, generated_sample, label='Generated Spectra', linestyle='--')
+        plt.scatter(filtered_photometry_wavelengths, photometry_data, label='Photometry', color='red')
+        # plt.set_title(f'Galaxy {i+1}')
+        plt.xlabel('Wavelength (µm)')
+        plt.ylabel('Flux')
+        plt.legend()
+        plt.grid(True)
 
         # Adjust layout and save the combined plot with 6 subplots
-        plt.tight_layout()
+        # plt.tight_layout()
         plt.savefig("Gan_eval_with_metrics_subplots.png")  # Save the combined figure
         plt.show()
 

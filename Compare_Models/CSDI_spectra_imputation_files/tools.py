@@ -121,11 +121,12 @@ def eval_test_plotter(eval_output, cond_mask, sorted_wavelengths, valid_dataset,
     observed_data_region = observed_data_region[mask]
     
     plt.figure(figsize=(10, 6))
-    plt.plot(sorted_wavelengths_region, samples_region, c="blue", linewidth=1)
-    plt.plot(sorted_wavelengths_region, observed_data_region, c="red", linewidth=1)
+    plt.plot(sorted_wavelengths_region, samples_region,  label='Real Spectra')
+    plt.plot(sorted_wavelengths_region, observed_data_region, label='Generated Spectra', linestyle='--')
     plt.xlabel("Wavelengths")
     plt.ylabel("Flux")
     plt.title("Sample vs Observed Data for Wavelengths < 35")
+    plt.legend()
     plt.grid(True)
     plt.show()
 
@@ -163,7 +164,7 @@ def error_chi_squared(eval_output, cond_mask, valid_dataset, i = 35, j = 4):
     
         # Plot histogram
     plt.figure(figsize=(8, 5))
-    plt.hist(chi_squared, bins=30, color='orange', alpha=0.7, edgecolor='black')
+    plt.hist(chi_squared, bins=30, color='blue', alpha=0.7)
     plt.xlabel('Chi-Squared Value')
     plt.ylabel('Frequency')
     plt.title('Histogram of Chi-Squared Values')
@@ -173,6 +174,31 @@ def error_chi_squared(eval_output, cond_mask, valid_dataset, i = 35, j = 4):
     
     return chi_squared, chi_under_5
 
+def plot_chi_squared_histograms(chi_squared):
+    # Convert to NumPy array
+    chi_squared = np.array(chi_squared)
+    
+    # Values less than 5
+    chi_squared_under_5 = chi_squared[chi_squared <= 5]
 
+    # Plot histogram for all values
+    plt.figure(figsize=(10, 6))
+    plt.hist(chi_squared, bins=50, alpha=0.7, color='blue', label="All Chi-Squared Values")
+    plt.xlabel("Chi-Squared Value")
+    plt.ylabel("Frequency")
+    plt.grid(True)
+    plt.title("Chi-Squared Histogram (All Values)")
+    plt.legend()
+    plt.show()
+
+    # Plot histogram for values <= 5
+    plt.figure(figsize=(10, 6))
+    plt.hist(chi_squared_under_5, bins=50, alpha=0.7, color='orange', label="Chi-Squared <= 5")
+    plt.xlabel("Chi-Squared Value")
+    plt.ylabel("Frequency")
+    plt.grid(True)
+    plt.title("Chi-Squared Histogram (Values <= 5)")
+    plt.legend()
+    plt.show()
 
 
